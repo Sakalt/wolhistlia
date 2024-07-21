@@ -3,6 +3,8 @@ const ctx = canvas.getContext('2d');
 let nations = [];
 let ships = [];
 let isIdleMode = false;
+let currentYear = 0;
+let currentMonth = 1;
 
 // 背景画像の設定
 const backgroundImage = new Image();
@@ -207,50 +209,13 @@ function handleInvasion(ship, nation) {
         if (ship.nation.strength > nation.strength) {
             // 防御側の国を滅ぼす
             nation.alive = false;
+            // 残存する領土を縮小
+            nation.territory = [];
         } else {
             // 攻撃側の国が敗北
             ship.nation.alive = false;
         }
     }
-}
-
-// 自動探索機能
-function autoExplore() {
-    if (nations.length < 2) return;
-    nations.forEach(nation => {
-        if (nation.ships > 0) {
-            const otherNations = nations.filter(n => n !== nation && n.alive);
-            if (otherNations.length > 0) {
-                const targetNation = otherNations[Math.floor(Math.random() * otherNations.length)];
-                const ship = new Ship(nation.x, nation.y, nation);
-                ship.target = { x: targetNation.x, y: targetNation.y };
-                ships.push(ship);
-                nation.ships--;
-            }
-        }
-    });
-}
-
-// 反乱機能
-function rebellion() {
-    nations.forEach(nation => {
-        if (nation.population > 100 && Math.random() < 0.1) { // 人口が多く、反乱確率に達した場合
-            nation.population -= 10;
-            const newNation = new Nation(
-                `${nation.name}-反乱`,
-                nation.x + Math.random() * 50 - 25,
-                nation.y + Math.random() * 50 - 25,
-                nation.strength / 2,
-                50,
-                nation.peaceLevel / 2,
-                nation.color,
-                nation.armySize / 2,
-                0,
-                nation.flagSize / 2
-            );
-            nations.push(newNation);
-        }
-    });
 }
 
 // 国を生成する関数
@@ -266,51 +231,83 @@ function createNation() {
     const shipCount = parseInt(document.getElementById('nationShips').value, 10);
     const flagSize = parseInt(document.getElementById('flagSize').value, 10);
 
+    const color = `${colorR}, ${colorG}, ${colorB}`;
     const x = Math.random() * canvas.width;
     const y = Math.random() * canvas.height;
 
-    const color = `${colorR}, ${colorG}, ${colorB}`;
     const newNation = new Nation(name, x, y, strength, population, peaceLevel, color, armySize, shipCount, flagSize);
     nations.push(newNation);
     drawAll();
 }
 
-// ゲームをリセットする関数
+// ゲームのリセット
 function resetGame() {
     nations = [];
     ships = [];
+    currentYear = 0;
+    currentMonth = 1;
     drawAll();
 }
 
 // ゲームを保存する関数
 function saveGame() {
-    const gameData = {
-        nations: nations,
-        ships: ships
-    };
-    localStorage.setItem('gameData', JSON.stringify(gameData));
-    showNotification('ゲームデータが保存されました');
+    const saveData = JSON.stringify({
+        nations: nations.map(nation => ({
+            name: nation.name,
+            x: nation.x,
+            y: nation.y,
+            strength: nation.strength,
+            population: nation.population,
+            peaceLevel: nation.peaceLevel,
+            color: nation.color,
+            armySize: nation.armySize,
+            ships: nation.ships,
+            flagSize: nation.flagSize,
+            alive: nation.alive
+        })),
+        ships: ships.map(ship => ({
+            x: ship.x,
+            y: ship.y,
+            nation: ship.nation.name,
+            target: ship.target ? { x: ship.target.x, y: ship.target.y } : null
+        })),
+        currentYear: currentYear,
+        currentMonth: currentMonth,
+        isIdleMode: isIdleMode
+    });
+    localStorage.setItem('gameSave', saveData);
 }
 
 // ゲームを読み込む関数
 function loadGame() {
-    const gameData = JSON.parse(localStorage.getItem('gameData'));
-    if (gameData) {
-        nations = gameData.nations;
-        ships = gameData.ships;
-        drawAll();
-        showNotification('ゲームデータが読み込まれました');
-    } else {
-        showNotification('保存されたゲームデータが見つかりません');
-    }
-}
-
-// 新しい船を追加する関数
-function addShip() {
-    if (nations.length > 0) {
-        const randomNation = nations[Math.floor(Math.random() * nations.length)];
-        const ship = new Ship(randomNation.x, randomNation.y, randomNation);
-        ships.push(ship);
+    const saveData = localStorage.getItem('gameSave');
+    if (saveData) {
+        const data = JSON.parse(saveData);
+        nations = data.nations.map(nationData => {
+            const nation = new Nation(
+                nationData.name,
+                nationData.x,
+                nationData.y,
+                nationData.strength,
+                nationData.population,
+                nationData.peaceLevel,
+                nationData.color,
+                nationData.armySize,
+                nationData.ships,
+                nationData.flagSize
+            );
+            nation.alive = nationData.alive;
+            return nation;
+        });
+        ships = data.ships.map(shipData => {
+            const nation = nations.find(nation => nation.name === shipData.nation);
+            const ship = new Ship(shipData.x, shipData.y, nation);
+            ship.target = shipData.target ? { x: shipData.target.x, y: shipData.target.y } : null;
+            return ship;
+        });
+        currentYear = data.currentYear;
+        currentMonth = data.currentMonth;
+        isIdleMode = data.isIdleMode;
         drawAll();
     }
 }
@@ -318,38 +315,53 @@ function addShip() {
 // 放置モードを切り替える関数
 function toggleIdleMode() {
     isIdleMode = !isIdleMode;
-    document.getElementById('toggleIdleMode').textContent = `放置モード: ${isIdleMode ? 'オン' : 'オフ'}`;
+    document.getElementById('toggleIdleMode').innerText = `放置モード: ${isIdleMode ? 'オン' : 'オフ'}`;
 }
 
-// 通知を表示する関数
-function showNotification(message) {
-    const notification = document.getElementById('notification');
-    notification.textContent = message;
-    notification.style.display = 'block';
-    setTimeout(() => {
-        notification.style.display = 'none';
-    }, 2000);
-}
-
-// 全ての描画を行う関数
+// すべてを描画する関数
 function drawAll() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
     nations.forEach(nation => nation.draw());
-    // ここで船の描画を追加する
+    handleTerritoryOverlap();
+    drawShips();
+    updateYearMonthDisplay();
+}
+
+// 船を描画する関数
+function drawShips() {
     ships.forEach(ship => {
         ctx.fillStyle = 'blue';
-        ctx.fillRect(ship.x, ship.y, 5, 5);
+        ctx.beginPath();
+        ctx.arc(ship.x, ship.y, 5, 0, 2 * Math.PI);
+        ctx.fill();
     });
 }
 
-// 各ボタンのイベントリスナーを設定
-document.getElementById('createNation').addEventListener('click', createNation);
-document.getElementById('resetGame').addEventListener('click', resetGame);
-document.getElementById('saveGame').addEventListener('click', saveGame);
-document.getElementById('loadGame').addEventListener('click', loadGame);
-document.getElementById('addShip').addEventListener('click', addShip);
-document.getElementById('toggleIdleMode').addEventListener('click', toggleIdleMode);
+// 年月を表示する関数
+function updateYearMonthDisplay() {
+    document.getElementById('yearMonthDisplay').innerText = `Year: ${currentYear}, Month: ${currentMonth}`;
+}
 
-// ゲームの初期描画
-drawAll();
+// 更新処理（主にゲームの進行）
+function update() {
+    if (isIdleMode) {
+        // 2日ごとに領土を拡大
+        if (currentMonth % 2 === 0) {
+            nations.forEach(nation => nation.expandTerritory(10));
+        }
+
+        // 年月の進行
+        currentMonth++;
+        if (currentMonth > 12) {
+            currentMonth = 1;
+            currentYear++;
+        }
+    }
+
+    moveShips();
+    drawAll();
+}
+
+// 定期的にゲームを更新
+setInterval(update, 1000); // 1秒ごとに更新
