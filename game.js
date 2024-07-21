@@ -37,6 +37,25 @@ Nation.prototype.generatePolygonTerritory = function() {
     return points;
 };
 
+// ポリゴンの領土を拡大
+Nation.prototype.expandTerritory = function(expansionAmount) {
+    const newPoints = [];
+    this.territory.forEach((point, index) => {
+        const nextPoint = this.territory[(index + 1) % this.territory.length];
+        const dx = nextPoint.x - point.x;
+        const dy = nextPoint.y - point.y;
+        const length = Math.sqrt(dx * dx + dy * dy);
+        const normalizedDx = dx / length;
+        const normalizedDy = dy / length;
+
+        newPoints.push({
+            x: point.x + normalizedDx * expansionAmount,
+            y: point.y + normalizedDy * expansionAmount
+        });
+    });
+    this.territory = newPoints;
+};
+
 // ポリゴンで領土を描画
 Nation.prototype.draw = function() {
     if (!this.alive) return; // 死亡している国は描画しない
@@ -134,6 +153,44 @@ function isPointInPolygon(x, y, polygon) {
         if (intersect) isInside = !isInside;
     }
     return isInside;
+}
+
+// ポリゴンが重なっているかどうかを判定する関数
+function polygonsOverlap(polygon1, polygon2) {
+    for (let i = 0; i < polygon1.length; i++) {
+        const p1 = polygon1[i];
+        const p2 = polygon1[(i + 1) % polygon1.length];
+        for (let j = 0; j < polygon2.length; j++) {
+            const q1 = polygon2[j];
+            const q2 = polygon2[(j + 1) % polygon2.length];
+            if (linesIntersect(p1, p2, q1, q2)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+// 線分が交差しているかどうかを判定する関数
+function linesIntersect(p1, p2, q1, q2) {
+    function ccw(a, b, c) {
+        return (c.y - a.y) * (b.x - a.x) > (b.y - a.y) * (c.x - a.x);
+    }
+    return ccw(p1, q1, q2) != ccw(p2, q1, q2) && ccw(p1, p2, q1) != ccw(p1, p2, q2);
+}
+
+// 領土が重なった場合の処理
+function handleTerritoryOverlap() {
+    for (let i = 0; i < nations.length; i++) {
+        for (let j = i + 1; j < nations.length; j++) {
+            if (polygonsOverlap(nations[i].territory, nations[j].territory)) {
+                // 領土が重なった場合の処理
+                // ここでは簡単に両方の領土を一時的に縮小する例
+                nations[i].expandTerritory(-10);
+                nations[j].expandTerritory(-10);
+            }
+        }
+    }
 }
 
 // 国に対する侵攻処理
@@ -242,7 +299,7 @@ function loadGame() {
             nation.ships,
             nation.flagSize
         ));
-        ships = gameState.ships.map(ship => new Ship(ship.x, ship.y, ship.nation));
+        ships = gameState.ships.map(ship => new Ship(ship.x, ship.y, nations.find(nation => nation.name === ship.nation.name)));
         drawAll();
         showNotification('ゲームが読み込まれました。');
     } else {
@@ -286,6 +343,12 @@ function gameLoop() {
     if (!isIdleMode) {
         moveShips();
     }
+    handleTerritoryOverlap(); // 領土の重なりチェック
+    nations.forEach(nation => {
+        if (nation.alive) {
+            nation.expandTerritory(0.1); // 領土の拡大
+        }
+    });
     drawAll();
     requestAnimationFrame(gameLoop);
 }
