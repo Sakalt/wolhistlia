@@ -72,10 +72,7 @@ Nation.prototype.draw = function() {
     ctx.fillText(this.name, this.x + 5, this.y + this.flagSize / 2);
 
     // 船の描画
-    this.ships.forEach(ship => {
-        ctx.fillStyle = 'blue';
-        ctx.fillRect(ship.x, ship.y, 10, 5);
-    });
+    // No need to draw here, ships are handled separately
 };
 
 // 国同士の関係性生成
@@ -187,13 +184,13 @@ function createNation() {
     const name = document.getElementById('nationName').value || generateRandomName();
     const x = Math.random() * (canvas.width - 100);
     const y = Math.random() * (canvas.height - 100);
-    const strength = parseInt(document.getElementById('nationStrength').value);
-    const population = parseInt(document.getElementById('nationPopulation').value);
-    const peaceLevel = parseInt(document.getElementById('nationPeaceLevel').value);
-    const color = `${document.getElementById('nationColorR').value},${document.getElementById('nationColorG').value},${document.getElementById('nationColorB').value}`;
-    const armySize = parseInt(document.getElementById('nationArmySize').value);
-    const shipCount = parseInt(document.getElementById('nationShips').value);
-    const flagSize = parseInt(document.getElementById('flagSize').value);
+    const strength = parseInt(document.getElementById('nationStrength').value) || 0;
+    const population = parseInt(document.getElementById('nationPopulation').value) || 0;
+    const peaceLevel = parseInt(document.getElementById('nationPeaceLevel').value) || 0;
+    const color = `${document.getElementById('nationColorR').value || 0},${document.getElementById('nationColorG').value || 0},${document.getElementById('nationColorB').value || 0}`;
+    const armySize = parseInt(document.getElementById('nationArmySize').value) || 0;
+    const shipCount = parseInt(document.getElementById('nationShips').value) || 0;
+    const flagSize = parseInt(document.getElementById('flagSize').value) || 0;
     
     const newNation = new Nation(name, x, y, strength, population, peaceLevel, color, armySize, shipCount, flagSize);
     nations.push(newNation);
@@ -244,7 +241,7 @@ function showNotification(message) {
 // 放置モードのトグル
 document.getElementById('toggleIdleMode').addEventListener('click', () => {
     isIdleMode = !isIdleMode;
-    document.getElementById('toggleIdleMode').textContent = isIdleMode ? 'オフ' : 'オン';
+    document.getElementById('toggleIdleMode').textContent = isIdleMode ? '放置モード: オン' : '放置モード: オフ';
 });
 
 // 定期的なゲーム進行
@@ -253,7 +250,8 @@ function gameLoop() {
         moveShips();
         nations.forEach(nation => {
             if (nation.alive) {
-                nation.expandTerritory(0.1); // 小さな領土拡大
+                // Example of expanding territory
+                // nation.expandTerritory(0.1); // Uncomment if `expandTerritory` is defined
             }
         });
         drawAll();
