@@ -18,28 +18,26 @@
             padding: 10px;
             margin-top: 10px;
         }
-        /* ボタンのスタイル */
         button {
-            background-color: red; /* 背景色を赤に */
-            color: white; /* 文字色を白に */
-            border: none; /* ボーダーをなしに */
-            padding: 10px 20px; /* 内側の余白 */
-            margin: 5px; /* ボタン間の余白 */
-            cursor: pointer; /* カーソルをポインタに */
-            border-radius: 5px; /* 角を丸く */
-            font-size: 16px; /* フォントサイズ */
+            background-color: red;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 16px;
         }
         button:hover {
-            background-color: darkred; /* ホバー時の背景色を少し暗く */
+            background-color: darkred;
         }
         button:active {
-            background-color: darkred; /* クリック時の背景色 */
+            background-color: darkred;
         }
     </style>
 </head>
 <body>
     <h1>国家生成ゲーム</h1>
-     <div id="yearMonthDisplay">Year: 0, Month: 1</div>
     <canvas id="gameCanvas" width="800" height="600"></canvas>
     <div class="control-panel">
         <h2>国を作成</h2>
@@ -71,6 +69,7 @@
         <button id="toggleIdleMode">放置モード: オフ</button>
     </div>
     <div id="notification" class="notification"></div>
+    <div id="dateDisplay">年月: 0000年1月</div>
     <script src="game.js"></script>
 </body>
 </html>
