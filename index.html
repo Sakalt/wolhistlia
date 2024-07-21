@@ -3,44 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ゲーム</title>
+    <title>国生成ゲーム</title>
     <style>
-        #notification {
-            display: none;
-            background-color: #f8d7da;
-            color: #721c24;
-            padding: 10px;
-            margin: 10px;
-            border: 1px solid #f5c6cb;
-            border-radius: 5px;
-        }
         #gameCanvas {
             border: 1px solid #000;
+        }
+        #notification {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background-color: #f00;
+            color: #fff;
+            text-align: center;
+            padding: 10px;
+            display: none;
+        }
+        .control-panel {
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
     <canvas id="gameCanvas" width="800" height="600"></canvas>
     <div id="notification"></div>
-
-    <input id="nationName" type="text" placeholder="国名">
-    <input id="nationStrength" type="number" placeholder="国力">
-    <input id="nationPopulation" type="number" placeholder="人口">
-    <input id="nationPeaceLevel" type="number" placeholder="平和度">
-    <input id="nationColorR" type="number" placeholder="赤" max="255">
-    <input id="nationColorG" type="number" placeholder="緑" max="255">
-    <input id="nationColorB" type="number" placeholder="青" max="255">
-    <input id="nationArmySize" type="number" placeholder="軍隊規模">
-    <input id="nationShips" type="number" placeholder="船の数">
-    <input id="flagSize" type="number" placeholder="国旗のサイズ">
-    
-    <button id="toggleIdleMode">放置モード: オフ</button>
-    <button onclick="createNation()">新しい国を作成</button>
-    <button onclick="resetGame()">リセット</button>
-    <button onclick="saveGame()">保存</button>
-    <button onclick="loadGame()">読み込み</button>
-    <button onclick="addShip()">新しい船を追加</button>
-    
+    <div class="control-panel">
+        <h2>国の生成</h2>
+        <label for="nationName">国名:</label>
+        <input type="text" id="nationName">
+        <br>
+        <label for="nationStrength">国力:</label>
+        <input type="number" id="nationStrength" value="0">
+        <br>
+        <label for="nationPopulation">人口:</label>
+        <input type="number" id="nationPopulation" value="0">
+        <br>
+        <label for="nationPeaceLevel">平和レベル:</label>
+        <input type="number" id="nationPeaceLevel" value="0">
+        <br>
+        <label for="nationColorR">色 (R):</label>
+        <input type="number" id="nationColorR" value="0" max="255">
+        <label for="nationColorG">色 (G):</label>
+        <input type="number" id="nationColorG" value="0" max="255">
+        <label for="nationColorB">色 (B):</label>
+        <input type="number" id="nationColorB" value="0" max="255">
+        <br>
+        <label for="nationArmySize">軍隊規模:</label>
+        <input type="number" id="nationArmySize" value="0">
+        <br>
+        <label for="nationShips">船の数:</label>
+        <input type="number" id="nationShips" value="0">
+        <br>
+        <label for="flagSize">国旗のサイズ:</label>
+        <input type="number" id="flagSize" value="20">
+        <br>
+        <button id="createNation">国を生成</button>
+        <button id="resetGame">ゲームリセット</button>
+        <button id="saveGame">ゲーム保存</button>
+        <button id="loadGame">ゲーム読み込み</button>
+        <button id="addShip">船を追加</button>
+        <br>
+        <button id="toggleIdleMode">放置モード: オフ</button>
+    </div>
     <script src="game.js"></script>
 </body>
 </html>
