@@ -191,7 +191,7 @@ function createNation() {
     const armySize = parseInt(document.getElementById('nationArmySize').value) || 0;
     const shipCount = parseInt(document.getElementById('nationShips').value) || 0;
     const flagSize = parseInt(document.getElementById('flagSize').value) || 0;
-    
+
     const newNation = new Nation(name, x, y, strength, population, peaceLevel, color, armySize, shipCount, flagSize);
     nations.push(newNation);
     drawAll();
