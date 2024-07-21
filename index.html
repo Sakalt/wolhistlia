@@ -24,6 +24,22 @@
             border-radius: 5px;
             display: none;
         }
+        .button {
+            background-color: red; /* ボタンの背景色を赤に設定 */
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .button:hover {
+            background-color: darkred; /* ホバー時の色を設定 */
+        }
     </style>
 </head>
 <body>
@@ -41,12 +57,12 @@
     <input type="number" id="nationShips" placeholder="船の数">
     <input type="number" id="flagSize" placeholder="国旗のサイズ">
     <br>
-    <button id="createNation">新しい国を作成</button>
-    <button id="resetGame">ゲームリセット</button>
-    <button id="saveGame">ゲーム保存</button>
-    <button id="loadGame">ゲーム読み込み</button>
-    <button id="addShip">新しい船を追加</button>
-    <button id="toggleIdleMode">放置モード: オフ</button>
+    <button id="createNation" class="button">新しい国を作成</button>
+    <button id="resetGame" class="button">ゲームリセット</button>
+    <button id="saveGame" class="button">ゲーム保存</button>
+    <button id="loadGame" class="button">ゲーム読み込み</button>
+    <button id="addShip" class="button">新しい船を追加</button>
+    <button id="toggleIdleMode" class="button">放置モード: オフ</button>
 
     <script src="game.js"></script>
 </body>
