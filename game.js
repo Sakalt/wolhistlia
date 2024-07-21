@@ -231,7 +231,12 @@ function loadGame() {
 
 // 船を追加
 function addShip() {
-    // 新しい船の追加処理をここに記述
+    const x = Math.random() * canvas.width;
+    const y = Math.random() * canvas.height;
+    const nation = nations[Math.floor(Math.random() * nations.length)];
+    if (nation) {
+        ships.push(new Ship(x, y, nation));
+    }
 }
 
 // 放置モードの切り替え
