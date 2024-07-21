@@ -3,67 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ゲーム</title>
+    <title>国家生成ゲーム</title>
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-        }
         #gameCanvas {
-            display: block;
-            background: #f0f0f0; /* 背景色（オプション） */
+            border: 1px solid black;
         }
-        #notification {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            padding: 10px;
-            background: rgba(0, 0, 0, 0.7);
-            color: #fff;
-            border-radius: 5px;
+        .control-panel {
+            margin-top: 20px;
+        }
+        .notification {
             display: none;
-        }
-        .button {
-            background-color: red; /* ボタンの背景色を赤に設定 */
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            text-align: center;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 16px;
-            margin: 4px 2px;
-            cursor: pointer;
-            border-radius: 4px;
-        }
-        .button:hover {
-            background-color: darkred; /* ホバー時の色を設定 */
+            background-color: yellow;
+            border: 1px solid black;
+            padding: 10px;
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
+    <h1>国家生成ゲーム</h1>
     <canvas id="gameCanvas" width="800" height="600"></canvas>
-    <div id="notification"></div>
-    <br>
-    <input type="text" id="nationName" placeholder="国名">
-    <input type="number" id="nationStrength" placeholder="国力">
-    <input type="number" id="nationPopulation" placeholder="人口">
-    <input type="number" id="nationPeaceLevel" placeholder="平和度">
-    <input type="number" id="nationColorR" placeholder="色 R" max="255">
-    <input type="number" id="nationColorG" placeholder="色 G" max="255">
-    <input type="number" id="nationColorB" placeholder="色 B" max="255">
-    <input type="number" id="nationArmySize" placeholder="軍隊規模">
-    <input type="number" id="nationShips" placeholder="船の数">
-    <input type="number" id="flagSize" placeholder="国旗のサイズ">
-    <br>
-    <button id="createNation" class="button">新しい国を作成</button>
-    <button id="resetGame" class="button">ゲームリセット</button>
-    <button id="saveGame" class="button">ゲーム保存</button>
-    <button id="loadGame" class="button">ゲーム読み込み</button>
-    <button id="addShip" class="button">新しい船を追加</button>
-    <button id="toggleIdleMode" class="button">放置モード: オフ</button>
-
+    <div class="control-panel">
+        <h2>国を作成</h2>
+        <label for="nationName">国名:</label>
+        <input type="text" id="nationName" value="新しい国"><br>
+        <label for="nationStrength">国力:</label>
+        <input type="number" id="nationStrength" value="100"><br>
+        <label for="nationPopulation">人口:</label>
+        <input type="number" id="nationPopulation" value="100"><br>
+        <label for="nationPeaceLevel">平和度:</label>
+        <input type="number" id="nationPeaceLevel" value="50"><br>
+        <label for="nationColorR">色(R):</label>
+        <input type="number" id="nationColorR" value="255"><br>
+        <label for="nationColorG">色(G):</label>
+        <input type="number" id="nationColorG" value="0"><br>
+        <label for="nationColorB">色(B):</label>
+        <input type="number" id="nationColorB" value="0"><br>
+        <label for="nationArmySize">軍隊規模:</label>
+        <input type="number" id="nationArmySize" value="50"><br>
+        <label for="nationShips">船の数:</label>
+        <input type="number" id="nationShips" value="10"><br>
+        <label for="flagSize">国旗のサイズ:</label>
+        <input type="number" id="flagSize" value="20"><br>
+        <button id="createNation">国を作成</button>
+        <button id="resetGame">ゲームをリセット</button>
+        <button id="saveGame">ゲームを保存</button>
+        <button id="loadGame">ゲームを読み込む</button>
+        <button id="addShip">船を追加</button>
+        <button id="toggleIdleMode">放置モード: オフ</button>
+    </div>
+    <div id="notification" class="notification"></div>
     <script src="game.js"></script>
 </body>
 </html>
