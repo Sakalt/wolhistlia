@@ -16,8 +16,6 @@
         }
         canvas {
             border: 1px solid #000;
-            background-image: url('world.png');
-            background-size: cover;
         }
         #controls {
             margin: 20px;
@@ -40,7 +38,7 @@
     </style>
 </head>
 <body>
-    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <canvas id="gameCanvas" width="1000" height="800"></canvas>
     
     <div id="controls">
         <div class="control-group">
@@ -89,9 +87,6 @@
             <label for="toggleIdleMode">放置モード:</label>
             <button id="toggleIdleMode">オン</button>
         </div>
-        <button onclick="resetGame()">リセット</button>
-        <button onclick="saveGame()">保存</button>
-        <button onclick="loadGame()">読み込み</button>
     </div>
     
     <div id="notification"></div>
