@@ -284,8 +284,6 @@ function loadGame() {
 
 // 船を追加
 function addShip() {
-    // 新しい船の追加処理をここに記述
-    // 例:
     const x = Math.random() * canvas.width;
     const y = Math.random() * canvas.height;
     const nation = nations[Math.floor(Math.random() * nations.length)];
@@ -304,8 +302,7 @@ function gameLoop() {
     handleWar();
     drawAll();
     if (isIdleMode) {
-        // 2日ごとに領土を拡大
-        if (Math.random() < 1 / 36.5) { // 1年=36.5日
+        if (Math.random() < 1 / 36.5) { // 2日ごとに領土を拡大
             nations.forEach(nation => nation.expandTerritory(10));
             drawAll();
         }
