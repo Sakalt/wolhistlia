@@ -5,53 +5,111 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ゲーム</title>
     <style>
-        body { font-family: Arial, sans-serif; }
-        canvas { border: 1px solid black; display: block; margin: 0 auto; }
-        #controls { text-align: center; margin: 20px; }
-        #notification { display: none; color: red; text-align: center; margin: 20px; }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        #gameCanvas {
+            display: block;
+            background: #eee;
+        }
+        #controls {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 100;
+        }
+        .control-item {
+            margin-bottom: 10px;
+        }
+        button {
+            background-color: #962122; /* 赤色 */
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #c73e3a; /* ホバー時の色 */
+        }
+        #notification {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #333;
+            color: #fff;
+            padding: 5px;
+            display: none;
+        }
     </style>
 </head>
 <body>
     <canvas id="gameCanvas" width="800" height="600"></canvas>
+    
     <div id="controls">
-        <label for="nationName">国名:</label>
-        <input type="text" id="nationName">
-        <br>
-        <label for="nationStrength">国力:</label>
-        <input type="number" id="nationStrength">
-        <br>
-        <label for="nationPopulation">人口:</label>
-        <input type="number" id="nationPopulation">
-        <br>
-        <label for="nationPeaceLevel">平和度:</label>
-        <input type="number" id="nationPeaceLevel">
-        <br>
-        <label for="nationColorR">色 (R):</label>
-        <input type="number" id="nationColorR" min="0" max="255">
-        <label for="nationColorG">G:</label>
-        <input type="number" id="nationColorG" min="0" max="255">
-        <label for="nationColorB">B:</label>
-        <input type="number" id="nationColorB" min="0" max="255">
-        <br>
-        <label for="nationArmySize">軍隊規模:</label>
-        <input type="number" id="nationArmySize">
-        <br>
-        <label for="nationShips">船の数:</label>
-        <input type="number" id="nationShips">
-        <br>
-        <label for="flagSize">国旗のサイズ:</label>
-        <input type="number" id="flagSize">
-        <br>
-        <button onclick="createNation()">国を作成</button>
-        <button onclick="resetGame()">リセット</button>
-        <button onclick="saveGame()">保存</button>
-        <button onclick="loadGame()">読み込み</button>
-        <button id="toggleIdleMode">放置モード: オフ</button>
-        <br>
-        <button onclick="addShip()">船を追加</button>
+        <div class="control-item">
+            <label for="nationName">国名:</label>
+            <input type="text" id="nationName">
+        </div>
+        <div class="control-item">
+            <label for="nationStrength">国力:</label>
+            <input type="number" id="nationStrength" value="50">
+        </div>
+        <div class="control-item">
+            <label for="nationPopulation">人口:</label>
+            <input type="number" id="nationPopulation" value="1000">
+        </div>
+        <div class="control-item">
+            <label for="nationPeaceLevel">平和レベル:</label>
+            <input type="number" id="nationPeaceLevel" value="50">
+        </div>
+        <div class="control-item">
+            <label for="nationColorR">国の色 (R):</label>
+            <input type="number" id="nationColorR" min="0" max="255" value="100">
+        </div>
+        <div class="control-item">
+            <label for="nationColorG">国の色 (G):</label>
+            <input type="number" id="nationColorG" min="0" max="255" value="100">
+        </div>
+        <div class="control-item">
+            <label for="nationColorB">国の色 (B):</label>
+            <input type="number" id="nationColorB" min="0" max="255" value="100">
+        </div>
+        <div class="control-item">
+            <label for="nationArmySize">軍隊規模:</label>
+            <input type="number" id="nationArmySize" value="10">
+        </div>
+        <div class="control-item">
+            <label for="nationShips">船の数:</label>
+            <input type="number" id="nationShips" value="5">
+        </div>
+        <div class="control-item">
+            <label for="flagSize">国旗のサイズ:</label>
+            <input type="number" id="flagSize" value="30">
+        </div>
+        <div class="control-item">
+            <button id="createNation">新しい国を作成</button>
+        </div>
+        <div class="control-item">
+            <button id="resetGame">リセット</button>
+        </div>
+        <div class="control-item">
+            <button id="saveGame">保存</button>
+        </div>
+        <div class="control-item">
+            <button id="loadGame">読み込み</button>
+        </div>
+        <div class="control-item">
+            <button id="toggleIdleMode">放置モード</button>
+        </div>
     </div>
+    
     <div id="notification"></div>
-
+    
     <script src="game.js"></script>
 </body>
 </html>
