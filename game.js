@@ -138,17 +138,13 @@ function moveShips() {
     });
 }
 
-// 船が目的地に到達したときの処理
+// 船が目的地に到達した時の処理
 function handleShipArrival(ship) {
-    const targetNation = nations.find(nation => 
-        isPointInPolygon(ship.target.x, ship.target.y, nation.territory)
-    );
-    if (targetNation && targetNation !== ship.nation) {
-        targetNation.exclaves.push({ x: ship.target.x, y: ship.target.y });
-    }
+    // 例: 目的地に到着した船の処理
+    // ここで戦争や貿易などの処理を追加可能
 }
 
-// ポリゴン内の点の判定
+// ポリゴン内の点を判定する関数
 function isPointInPolygon(x, y, polygon) {
     let inside = false;
     for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
@@ -161,10 +157,54 @@ function isPointInPolygon(x, y, polygon) {
     return inside;
 }
 
-// 全ての国を描画
+// 戦争を発生させる関数
+function startWar() {
+    nations.forEach(nation => {
+        Object.keys(nation.relationships).forEach(otherNationName => {
+            const relationship = nation.relationships[otherNationName];
+            if (relationship === '敵対') {
+                // 戦争を発生させる
+                const otherNation = nations.find(n => n.name === otherNationName);
+                if (otherNation) {
+                    handleWar(nation, otherNation);
+                }
+            }
+        });
+    });
+}
+
+// 戦争処理
+function handleWar(nation1, nation2) {
+    // 戦争発生
+    showNotification(`${nation1.name} と ${nation2.name} が戦争を開始しました！`);
+
+    // 戦争の結果を決定
+    if (Math.random() > 0.5) {
+        nation1.population -= Math.floor(nation1.population * 0.1);
+        nation2.population -= Math.floor(nation2.population * 0.1);
+    } else {
+        nation1.population -= Math.floor(nation1.population * 0.1);
+        nation2.population -= Math.floor(nation2.population * 0.1);
+    }
+
+    // 国の生死を判定
+    nation1.alive = nation1.population > 0;
+    nation2.alive = nation2.population > 0;
+
+    // 死亡した国の領土を削除
+    if (!nation1.alive) {
+        nations = nations.filter(n => n !== nation1);
+    }
+    if (!nation2.alive) {
+        nations = nations.filter(n => n !== nation2);
+    }
+}
+
+// 全てを描画する関数
 function drawAll() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
+    ctx.drawImage(backgroundImage, 0, 0);
+
     nations.forEach(nation => nation.draw());
     ships.forEach(ship => {
         ctx.fillStyle = 'blue';
@@ -172,99 +212,92 @@ function drawAll() {
         ctx.arc(ship.x, ship.y, 5, 0, 2 * Math.PI);
         ctx.fill();
     });
-    // 年月の表示
-    document.getElementById('dateDisplay').textContent = `年月: ${currentYear}年${currentMonth + 1}月`;
 }
 
-// ゲームリセット
-function resetGame() {
-    nations = [];
-    ships = [];
-    currentYear = 0;
-    currentMonth = 0;
-    drawAll();
-}
-
-// ゲーム保存
-function saveGame() {
-    const gameState = {
-        nations: nations.map(nation => ({
-            name: nation.name,
-            x: nation.x,
-            y: nation.y,
-            strength: nation.strength,
-            population: nation.population,
-            peaceLevel: nation.peaceLevel,
-            color: nation.color,
-            armySize: nation.armySize,
-            shipCount: nation.ships,
-            flagSize: nation.flagSize,
-            territory: nation.territory,
-            exclaves: nation.exclaves,
-            relationships: nation.relationships
-        })),
-        ships: ships,
-        currentYear: currentYear,
-        currentMonth: currentMonth
-    };
-    localStorage.setItem('gameState', JSON.stringify(gameState));
-}
-
-// ゲーム読み込み
-function loadGame() {
-    const savedState = localStorage.getItem('gameState');
-    if (savedState) {
-        const gameState = JSON.parse(savedState);
-        nations = gameState.nations.map(data => {
-            const nation = new Nation(data.name, data.x, data.y, data.strength, data.population, data.peaceLevel, data.color, data.armySize, data.shipCount, data.flagSize);
-            nation.territory = data.territory;
-            nation.exclaves = data.exclaves;
-            nation.relationships = data.relationships;
-            return nation;
-        });
-        ships = gameState.ships;
-        currentYear = gameState.currentYear;
-        currentMonth = gameState.currentMonth;
-        drawAll();
-    }
-}
-
-// 船を追加
-function addShip() {
+// 国を作成する関数
+document.getElementById('createNation').addEventListener('click', () => {
+    const name = document.getElementById('nationName').value;
     const x = Math.random() * canvas.width;
     const y = Math.random() * canvas.height;
-    const nation = nations[Math.floor(Math.random() * nations.length)];
-    if (nation) {
-        ships.push(new Ship(x, y, nation));
-    }
-}
+    const strength = parseInt(document.getElementById('nationStrength').value);
+    const population = parseInt(document.getElementById('nationPopulation').value);
+    const peaceLevel = parseInt(document.getElementById('nationPeaceLevel').value);
+    const colorR = parseInt(document.getElementById('nationColorR').value);
+    const colorG = parseInt(document.getElementById('nationColorG').value);
+    const colorB = parseInt(document.getElementById('nationColorB').value);
+    const color = `${colorR},${colorG},${colorB}`;
+    const armySize = parseInt(document.getElementById('nationArmySize').value);
+    const shipCount = parseInt(document.getElementById('nationShips').value);
+    const flagSize = parseInt(document.getElementById('flagSize').value);
 
-// 放置モードの切り替え
-function toggleIdleMode() {
-    isIdleMode = !isIdleMode;
-    document.getElementById('toggleIdleMode').textContent = `放置モード: ${isIdleMode ? 'オン' : 'オフ'}`;
-}
-
-// ゲームの更新
-function gameLoop() {
-    moveShips();
+    const newNation = new Nation(name, x, y, strength, population, peaceLevel, color, armySize, shipCount, flagSize);
+    nations.push(newNation);
     drawAll();
+});
+
+// ゲームをリセットする関数
+document.getElementById('resetGame').addEventListener('click', () => {
+    nations = [];
+    ships = [];
+    drawAll();
+});
+
+// ゲームを保存する関数
+document.getElementById('saveGame').addEventListener('click', () => {
+    localStorage.setItem('nations', JSON.stringify(nations));
+    localStorage.setItem('ships', JSON.stringify(ships));
+    showNotification('ゲームが保存されました');
+});
+
+// ゲームを読み込む関数
+document.getElementById('loadGame').addEventListener('click', () => {
+    nations = JSON.parse(localStorage.getItem('nations')) || [];
+    ships = JSON.parse(localStorage.getItem('ships')) || [];
+    drawAll();
+});
+
+// 船を追加する関数
+document.getElementById('addShip').addEventListener('click', () => {
+    const nation = nations[0]; // 例として最初の国を選択
+    const ship = new Ship(Math.random() * canvas.width, Math.random() * canvas.height, nation);
+    ships.push(ship);
+});
+
+// 放置モードのトグル
+document.getElementById('toggleIdleMode').addEventListener('click', (event) => {
+    isIdleMode = !isIdleMode;
+    event.target.textContent = `放置モード: ${isIdleMode ? 'オン' : 'オフ'}`;
     if (isIdleMode) {
-        // 2日ごとに領土を拡大
-        if (Math.random() < 1 / 36.5) { // 1年=36.5日
-            nations.forEach(nation => nation.expandTerritory(10));
+        setInterval(() => {
+            nations.forEach(nation => nation.expandTerritory(5));
             drawAll();
-        }
+        }, 2000); // 2秒ごとに領土拡大
     }
-    requestAnimationFrame(gameLoop);
+});
+
+// 戦争開始ボタンのイベント
+document.getElementById('startWar').addEventListener('click', startWar);
+
+// 年月の表示更新
+function updateDate() {
+    currentMonth += 1;
+    if (currentMonth > 12) {
+        currentMonth = 1;
+        currentYear += 1;
+    }
+    document.getElementById('dateDisplay').textContent = `年月: ${currentYear}年${currentMonth}月`;
+}
+setInterval(updateDate, 1000); // 1秒ごとに年月更新
+
+// 通知を表示する関数
+function showNotification(message) {
+    const notification = document.getElementById('notification');
+    notification.textContent = message;
+    notification.style.display = 'block';
+    setTimeout(() => {
+        notification.style.display = 'none';
+    }, 3000);
 }
 
-// 初期化
-document.getElementById('createNation').addEventListener('click', createNation);
-document.getElementById('resetGame').addEventListener('click', resetGame);
-document.getElementById('saveGame').addEventListener('click', saveGame);
-document.getElementById('loadGame').addEventListener('click', loadGame);
-document.getElementById('addShip').addEventListener('click', addShip);
-document.getElementById('toggleIdleMode').addEventListener('click', toggleIdleMode);
-
-gameLoop();
+// 描画と動作を初期化
+drawAll();
