@@ -3,7 +3,6 @@ const ctx = canvas.getContext('2d');
 let nations = [];
 let ships = [];
 let isIdleMode = false;
-let year = 0;
 
 // 国のコンストラクタ
 function Nation(name, x, y, strength, population, peaceLevel, color, armySize, shipCount, flagSize) {
@@ -19,8 +18,6 @@ function Nation(name, x, y, strength, population, peaceLevel, color, armySize, s
     this.flagSize = flagSize;
     this.territory = this.generatePolygonTerritory();
     this.exclaves = [];
-    console.log(this); // 確認用
-    this.generateExclave(); // 修正箇所
     this.alive = true;
     this.relationships = {}; // 他国との関係性（友好度/敵対度）
     this.generateRelationships();
@@ -172,7 +169,6 @@ function createShip(x, y, nation) {
 // すべての国と船を描画
 function drawAll() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(worldImage, 0, 0, canvas.width, canvas.height); // 背景画像を描画
     nations.forEach(nation => nation.draw());
     ships.forEach(ship => {
         ctx.fillStyle = 'blue';
@@ -191,88 +187,114 @@ function createNation() {
     const color = `${document.getElementById('nationColorR').value || 0},${document.getElementById('nationColorG').value || 0},${document.getElementById('nationColorB').value || 0}`;
     const armySize = parseInt(document.getElementById('nationArmySize').value) || 0;
     const shipCount = parseInt(document.getElementById('nationShips').value) || 0;
-    const flagSize = parseInt(document.getElementById('flagSize').value) || 0;
+    const flagSize = parseInt(document.getElementById('flagSize').value) || 20;
 
     const newNation = new Nation(name, x, y, strength, population, peaceLevel, color, armySize, shipCount, flagSize);
     nations.push(newNation);
     drawAll();
 }
 
-// ランダムな国名生成
-function generateRandomName() {
-    const syllables = ['k', 's', 't', 'm', 'y', 'r', 'w', 'h', 'g', 'z', 'd', 'p', 'ch', 'sh', 'zh'];
-    const vowels = ['a', 'i', 'u', 'e', 'o', 'ea'];
-    let name = '';
-    for (let i = 0; i < 3; i++) {
-        name += syllables[Math.floor(Math.random() * syllables.length)];
-        name += vowels[Math.floor(Math.random() * vowels.length)];
-    }
-    return name.charAt(0).toUpperCase() + name.slice(1);
-}
-
-// リセット
+// 国をリセット
 function resetGame() {
     nations = [];
     ships = [];
     drawAll();
 }
 
-// 保存
+// ゲームの状態を保存
 function saveGame() {
-    localStorage.setItem('nations', JSON.stringify(nations));
-    localStorage.setItem('ships', JSON.stringify(ships));
-    showNotification('ゲームデータを保存しました。');
+    const gameState = {
+        nations: nations.map(nation => ({
+            name: nation.name,
+            x: nation.x,
+            y: nation.y,
+            strength: nation.strength,
+            population: nation.population,
+            peaceLevel: nation.peaceLevel,
+            color: nation.color,
+            armySize: nation.armySize,
+            ships: nation.ships,
+            flagSize: nation.flagSize,
+            territory: nation.territory,
+            exclaves: nation.exclaves,
+            alive: nation.alive,
+            relationships: nation.relationships
+        })),
+        ships: ships
+    };
+    localStorage.setItem('gameState', JSON.stringify(gameState));
+    showNotification('ゲームが保存されました。');
 }
 
-// 読み込み
+// ゲームの状態を読み込む
 function loadGame() {
-    nations = JSON.parse(localStorage.getItem('nations')) || [];
-    ships = JSON.parse(localStorage.getItem('ships')) || [];
-    drawAll();
+    const gameState = JSON.parse(localStorage.getItem('gameState'));
+    if (gameState) {
+        nations = gameState.nations.map(nation => new Nation(
+            nation.name,
+            nation.x,
+            nation.y,
+            nation.strength,
+            nation.population,
+            nation.peaceLevel,
+            nation.color,
+            nation.armySize,
+            nation.ships,
+            nation.flagSize
+        ));
+        ships = gameState.ships.map(ship => new Ship(ship.x, ship.y, ship.nation));
+        drawAll();
+        showNotification('ゲームが読み込まれました。');
+    } else {
+        showNotification('保存されたゲームがありません。');
+    }
 }
 
-// 通知表示
+// 新しい船を追加
+function addShip() {
+    const nationName = prompt('船を追加する国の名前を入力してください:');
+    const nation = nations.find(n => n.name === nationName);
+    if (nation) {
+        const x = Math.random() * canvas.width;
+        const y = Math.random() * canvas.height;
+        createShip(x, y, nation);
+        drawAll();
+        showNotification(`国 ${nationName} に新しい船が追加されました。`);
+    } else {
+        showNotification('指定された国が見つかりません。');
+    }
+}
+
+// 通知を表示する関数
 function showNotification(message) {
     const notification = document.getElementById('notification');
     notification.textContent = message;
     notification.style.display = 'block';
-    setTimeout(() => notification.style.display = 'none', 3000);
+    setTimeout(() => {
+        notification.style.display = 'none';
+    }, 3000);
 }
 
-// 放置モードのトグル
-document.getElementById('toggleIdleMode').addEventListener('click', () => {
-    isIdleMode = !isIdleMode;
-    document.getElementById('toggleIdleMode').textContent = isIdleMode ? '放置モード: オン' : '放置モード: オフ';
-});
+// ランダムな国名を生成する関数（例）
+function generateRandomName() {
+    const names = ['エルドリア', 'アストラ', 'ザリオン', 'フェリシア', 'ノヴァ'];
+    return names[Math.floor(Math.random() * names.length)];
+}
 
-// 定期的なゲーム進行
+// ゲームループの設定
 function gameLoop() {
-    if (isIdleMode) {
+    if (!isIdleMode) {
         moveShips();
-        nations.forEach(nation => {
-            if (nation.alive) {
-                // Example of expanding territory
-                // nation.expandTerritory(0.1); // Uncomment if `expandTerritory` is defined
-            }
-        });
-        drawAll();
     }
+    drawAll();
     requestAnimationFrame(gameLoop);
 }
 
-// 背景画像
-const worldImage = new Image();
-worldImage.src = 'world.png'; // 背景画像のパス
-worldImage.onload = () => {
-    // 初期化
-    gameLoop();
-};
+// ボタンのイベントリスナーを設定
+document.getElementById('toggleIdleMode').addEventListener('click', () => {
+    isIdleMode = !isIdleMode;
+    document.getElementById('toggleIdleMode').textContent = `放置モード: ${isIdleMode ? 'オン' : 'オフ'}`;
+});
 
-// 新しい船を作成して目的地を設定するサンプル
-function addShip() {
-    const nation = nations[0]; // 仮に最初の国にする
-    const x = nation.x;
-    const y = nation.y;
-    const newShip = createShip(x, y, nation);
-    setShipTarget(newShip, Math.random() * canvas.width, Math.random() * canvas.height);
-}
+// 初期化とゲームループの開始
+gameLoop();
