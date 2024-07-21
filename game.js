@@ -19,7 +19,8 @@ function Nation(name, x, y, strength, population, peaceLevel, color, armySize, s
     this.flagSize = flagSize;
     this.territory = this.generatePolygonTerritory();
     this.exclaves = [];
-    this.generateExclave();
+    console.log(this); // 確認用
+    this.generateExclave(); // 修正箇所
     this.alive = true;
     this.relationships = {}; // 他国との関係性（友好度/敵対度）
     this.generateRelationships();
