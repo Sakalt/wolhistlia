@@ -3,6 +3,30 @@ const ctx = canvas.getContext('2d');
 let nations = [];
 let ships = [];
 let isIdleMode = false;
+const backgroundImage = new Image(); // 背景画像のオブジェクト
+backgroundImage.src = 'world.png';   // 画像ファイルのパスを設定
+let backgroundLoaded = false;
+
+// 画像の読み込み
+backgroundImage.src = 'world.png';
+backgroundImage.onload = function() {
+    backgroundLoaded = true;
+    drawAll(); // 画像が読み込まれた後に描画を開始
+};
+
+// すべての国と船を描画
+function drawAll() {
+    if (!backgroundLoaded) return; // 背景画像が読み込まれていない場合は描画しない
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height); // 背景画像を描画
+
+    nations.forEach(nation => nation.draw());
+    ships.forEach(ship => {
+        ctx.fillStyle = 'blue';
+        ctx.fillRect(ship.x, ship.y, 10, 5);
+    });
+}
 
 // 国のコンストラクタ
 function Nation(name, x, y, strength, population, peaceLevel, color, armySize, shipCount, flagSize) {
@@ -221,16 +245,6 @@ function createShip(x, y, nation) {
     const newShip = new Ship(x, y, nation);
     ships.push(newShip);
     return newShip;
-}
-
-// すべての国と船を描画
-function drawAll() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    nations.forEach(nation => nation.draw());
-    ships.forEach(ship => {
-        ctx.fillStyle = 'blue';
-        ctx.fillRect(ship.x, ship.y, 10, 5);
-    });
 }
 
 // 新しい国を作成
