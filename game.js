@@ -5,6 +5,10 @@ let ships = [];
 let isIdleMode = false;
 let year = 0;
 
+// 背景画像の初期化
+const worldImage = new Image();
+worldImage.src = 'world.png'; // 背景画像のパス
+
 // 国のコンストラクタ
 function Nation(name, x, y, strength, population, peaceLevel, color, armySize, shipCount, flagSize) {
     this.name = name;
@@ -57,13 +61,12 @@ Nation.prototype.draw = function() {
 
     // 領土の描画
     ctx.fillStyle = `rgba(${this.color}, 0.5)`; // 半透明
-    ctx.beginPath();
     this.territory.forEach(area => {
-        ctx.moveTo(area.x + area.radius, area.y);
+        ctx.beginPath();
         ctx.arc(area.x, area.y, area.radius, 0, 2 * Math.PI);
+        ctx.closePath();
+        ctx.fill();
     });
-    ctx.closePath();
-    ctx.fill();
 
     // 飛地の描画
     this.exclaves.forEach(exclave => {
@@ -79,12 +82,6 @@ Nation.prototype.draw = function() {
     // 国名の描画
     ctx.fillStyle = '#000';
     ctx.fillText(this.name, this.x + 5, this.y + this.flagSize / 2);
-
-    // 船の描画
-    this.ships.forEach(ship => {
-        ctx.fillStyle = 'blue';
-        ctx.fillRect(ship.x, ship.y, 10, 5);
-    });
 };
 
 // 船のコンストラクタ
@@ -249,9 +246,7 @@ function gameLoop() {
     requestAnimationFrame(gameLoop);
 }
 
-// 背景画像
-const worldImage = new Image();
-worldImage.src = 'world.png'; // 背景画像のパス
+// 初期化
 worldImage.onload = () => {
     // 初期化
     gameLoop();
