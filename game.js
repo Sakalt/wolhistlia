@@ -5,10 +5,6 @@ let ships = [];
 let isIdleMode = false;
 let year = 0;
 
-// 背景画像の初期化
-const worldImage = new Image();
-worldImage.src = 'world.png'; // 背景画像のパス
-
 // 国のコンストラクタ
 function Nation(name, x, y, strength, population, peaceLevel, color, armySize, shipCount, flagSize) {
     this.name = name;
@@ -21,7 +17,7 @@ function Nation(name, x, y, strength, population, peaceLevel, color, armySize, s
     this.armySize = armySize;
     this.ships = shipCount;
     this.flagSize = flagSize;
-    this.territory = [{ x: x, y: y, radius: flagSize / 2 }];
+    this.territory = this.generatePolygonTerritory();
     this.exclaves = [];
     this.generateExclave();
     this.alive = true;
@@ -29,30 +25,18 @@ function Nation(name, x, y, strength, population, peaceLevel, color, armySize, s
     this.generateRelationships();
 }
 
-// 飛地生成
-Nation.prototype.generateExclave = function() {
-    const numExclaves = Math.floor(Math.random() * 3); // 最大で3つの飛地
-    for (let i = 0; i < numExclaves; i++) {
-        const xOffset = Math.random() * 200 - 100;
-        const yOffset = Math.random() * 200 - 100;
-        this.exclaves.push({ x: this.x + xOffset, y: this.y + yOffset });
+// ポリゴンの領土を生成
+Nation.prototype.generatePolygonTerritory = function() {
+    const vertices = Math.floor(Math.random() * 6) + 3; // 3〜8辺のポリゴン
+    const radius = this.flagSize / 2;
+    const points = [];
+    for (let i = 0; i < vertices; i++) {
+        const angle = (i / vertices) * 2 * Math.PI;
+        const x = this.x + radius * Math.cos(angle);
+        const y = this.y + radius * Math.sin(angle);
+        points.push({ x, y });
     }
-};
-
-// 国同士の関係性生成
-Nation.prototype.generateRelationships = function() {
-    nations.forEach(otherNation => {
-        if (otherNation !== this) {
-            this.relationships[otherNation.name] = Math.random() > 0.5 ? '友好' : '敵対';
-        }
-    });
-};
-
-// 領土拡大
-Nation.prototype.expandTerritory = function(amount) {
-    this.territory.forEach(area => {
-        area.radius += amount;
-    });
+    return points;
 };
 
 // ポリゴンで領土を描画
@@ -61,12 +45,16 @@ Nation.prototype.draw = function() {
 
     // 領土の描画
     ctx.fillStyle = `rgba(${this.color}, 0.5)`; // 半透明
-    this.territory.forEach(area => {
-        ctx.beginPath();
-        ctx.arc(area.x, area.y, area.radius, 0, 2 * Math.PI);
-        ctx.closePath();
-        ctx.fill();
+    ctx.beginPath();
+    this.territory.forEach((point, index) => {
+        if (index === 0) {
+            ctx.moveTo(point.x, point.y);
+        } else {
+            ctx.lineTo(point.x, point.y);
+        }
     });
+    ctx.closePath();
+    ctx.fill();
 
     // 飛地の描画
     this.exclaves.forEach(exclave => {
@@ -82,6 +70,21 @@ Nation.prototype.draw = function() {
     // 国名の描画
     ctx.fillStyle = '#000';
     ctx.fillText(this.name, this.x + 5, this.y + this.flagSize / 2);
+
+    // 船の描画
+    this.ships.forEach(ship => {
+        ctx.fillStyle = 'blue';
+        ctx.fillRect(ship.x, ship.y, 10, 5);
+    });
+};
+
+// 国同士の関係性生成
+Nation.prototype.generateRelationships = function() {
+    nations.forEach(otherNation => {
+        if (otherNation !== this) {
+            this.relationships[otherNation.name] = Math.random() > 0.5 ? '友好' : '敵対';
+        }
+    });
 };
 
 // 船のコンストラクタ
@@ -115,8 +118,7 @@ function moveShips() {
 // 船が目的地に到達したときの処理
 function handleShipArrival(ship) {
     const targetNation = nations.find(nation => 
-        nation.x < ship.x && ship.x < nation.x + nation.flagSize &&
-        nation.y < ship.y && ship.y < nation.y + nation.flagSize
+        isPointInPolygon(ship.x, ship.y, nation.territory)
     );
     if (targetNation) {
         // 国に侵攻する
@@ -124,6 +126,19 @@ function handleShipArrival(ship) {
     }
     // 目的地をクリア
     ship.target = null;
+}
+
+// ポリゴン内に点があるかをチェックする関数
+function isPointInPolygon(x, y, polygon) {
+    let isInside = false;
+    for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+        const xi = polygon[i].x, yi = polygon[i].y;
+        const xj = polygon[j].x, yj = polygon[j].y;
+        const intersect = ((yi > y) !== (yj > y)) &&
+            (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+        if (intersect) isInside = !isInside;
+    }
+    return isInside;
 }
 
 // 国に対する侵攻処理
@@ -246,7 +261,9 @@ function gameLoop() {
     requestAnimationFrame(gameLoop);
 }
 
-// 初期化
+// 背景画像
+const worldImage = new Image();
+worldImage.src = 'world.png'; // 背景画像のパス
 worldImage.onload = () => {
     // 初期化
     gameLoop();
