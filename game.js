@@ -214,6 +214,45 @@ function handleInvasion(ship, nation) {
     }
 }
 
+// 自動探索機能
+function autoExplore() {
+    if (nations.length < 2) return;
+    nations.forEach(nation => {
+        if (nation.ships > 0) {
+            const otherNations = nations.filter(n => n !== nation && n.alive);
+            if (otherNations.length > 0) {
+                const targetNation = otherNations[Math.floor(Math.random() * otherNations.length)];
+                const ship = new Ship(nation.x, nation.y, nation);
+                ship.target = { x: targetNation.x, y: targetNation.y };
+                ships.push(ship);
+                nation.ships--;
+            }
+        }
+    });
+}
+
+// 反乱機能
+function rebellion() {
+    nations.forEach(nation => {
+        if (nation.population > 100 && Math.random() < 0.1) { // 人口が多く、反乱確率に達した場合
+            nation.population -= 10;
+            const newNation = new Nation(
+                `${nation.name}-反乱`,
+                nation.x + Math.random() * 50 - 25,
+                nation.y + Math.random() * 50 - 25,
+                nation.strength / 2,
+                50,
+                nation.peaceLevel / 2,
+                nation.color,
+                nation.armySize / 2,
+                0,
+                nation.flagSize / 2
+            );
+            nations.push(newNation);
+        }
+    });
+}
+
 // 国を生成する関数
 function createNation() {
     const name = document.getElementById('nationName').value;
