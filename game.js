@@ -216,24 +216,25 @@ function handleWar() {
     nations.forEach(nation => {
         if (nation.alive) {
             // 人口の減少
-            nation.population -= Math.floor(nation.armySize / 2);
+            nation.population -= Math.floor(nation.armySize / 2 * 0.01); // 1秒ごとに減少
             if (nation.population <= 0) {
-                nation.alive = false; // 国が滅亡
+                nation.alive = false;
             }
         }
     });
 }
 
-// ゲームリセット
+// ゲームのリセット
 function resetGame() {
     nations = [];
     ships = [];
     currentYear = 0;
     currentMonth = 0;
+    selectedNation = null;
     drawAll();
 }
 
-// ゲーム保存
+// ゲームの保存
 function saveGame() {
     const gameState = {
         nations: nations.map(nation => ({
@@ -260,7 +261,7 @@ function saveGame() {
     localStorage.setItem('gameState', JSON.stringify(gameState));
 }
 
-// ゲーム読み込み
+// ゲームの読み込み
 function loadGame() {
     const savedState = localStorage.getItem('gameState');
     if (savedState) {
@@ -284,6 +285,11 @@ function loadGame() {
 // 船を追加
 function addShip() {
     // 新しい船の追加処理をここに記述
+    // 例:
+    const x = Math.random() * canvas.width;
+    const y = Math.random() * canvas.height;
+    const nation = nations[Math.floor(Math.random() * nations.length)];
+    ships.push(new Ship(x, y, nation));
 }
 
 // 放置モードの切り替え
@@ -307,7 +313,7 @@ function gameLoop() {
     requestAnimationFrame(gameLoop);
 }
 
-// 初期化
+// イベントリスナー
 document.getElementById('createNation').addEventListener('click', createNation);
 document.getElementById('resetGame').addEventListener('click', resetGame);
 document.getElementById('saveGame').addEventListener('click', saveGame);
