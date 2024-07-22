@@ -37,7 +37,7 @@ function Nation(name, x, y, strength, population, peaceLevel, color, armySize, s
 // ポリゴンの領土を生成
 Nation.prototype.generatePolygonTerritory = function() {
     const vertices = Math.floor(Math.random() * 6) + 3; // 3〜8辺のポリゴン
-    const radius = this.flagSize / 2;
+    const radius = this.flagSize * 2; // 領土の半径を調整
     const points = [];
     for (let i = 0; i < vertices; i++) {
         const angle = (i / vertices) * 2 * Math.PI;
@@ -294,6 +294,28 @@ function addShip() {
 function toggleIdleMode() {
     isIdleMode = !isIdleMode;
     document.getElementById('toggleIdleMode').textContent = `放置モード: ${isIdleMode ? 'オン' : 'オフ'}`;
+}
+
+// 国を作成する関数
+function createNation() {
+    const name = prompt('国名を入力してください:');
+    const x = parseFloat(prompt('X座標を入力してください:'));
+    const y = parseFloat(prompt('Y座標を入力してください:'));
+    const strength = parseFloat(prompt('国力を入力してください:'));
+    const population = parseFloat(prompt('人口を入力してください:'));
+    const peaceLevel = parseFloat(prompt('平和度を入力してください:'));
+    const color = prompt('色 (RGB形式, 例: "255,0,0") を入力してください:');
+    const armySize = parseFloat(prompt('軍隊規模を入力してください:'));
+    const shipCount = parseFloat(prompt('船の数を入力してください:'));
+    const flagSize = parseFloat(prompt('国旗のサイズを入力してください:'));
+    
+    if (name && !isNaN(x) && !isNaN(y) && !isNaN(strength) && !isNaN(population) && !isNaN(peaceLevel) && color && !isNaN(armySize) && !isNaN(shipCount) && !isNaN(flagSize)) {
+        const nation = new Nation(name, x, y, strength, population, peaceLevel, color, armySize, shipCount, flagSize);
+        nations.push(nation);
+        drawAll();
+    } else {
+        alert('入力された値に誤りがあります。');
+    }
 }
 
 // ゲームの更新
