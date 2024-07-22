@@ -3,74 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>国家生成ゲーム</title>
+    <title>ゲーム</title>
     <style>
-        #gameCanvas {
+        canvas {
             border: 1px solid black;
         }
-        .control-panel {
-            margin-top: 20px;
-        }
-        .notification {
-            display: none;
-            background-color: yellow;
-            border: 1px solid black;
-            padding: 10px;
+        #controls, #createNationForm {
             margin-top: 10px;
         }
         button {
-            background-color: red;
+            margin-right: 10px;
+            background-color: red; /* ボタンの色を赤に変更 */
             color: white;
             border: none;
             padding: 10px 20px;
-            margin: 5px;
             cursor: pointer;
-            border-radius: 5px;
-            font-size: 16px;
         }
         button:hover {
-            background-color: darkred;
+            opacity: 0.8;
         }
-        button:active {
-            background-color: darkred;
+        #nationInfo {
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
-    <h1>国家生成ゲーム</h1>
     <canvas id="gameCanvas" width="800" height="600"></canvas>
-    <div class="control-panel">
-        <h2>国を作成</h2>
-        <label for="nationName">国名:</label>
-        <input type="text" id="nationName" value="新しい国"><br>
-        <label for="nationStrength">国力:</label>
-        <input type="number" id="nationStrength" value="100"><br>
-        <label for="nationPopulation">人口:</label>
-        <input type="number" id="nationPopulation" value="100"><br>
-        <label for="nationPeaceLevel">平和度:</label>
-        <input type="number" id="nationPeaceLevel" value="50"><br>
-        <label for="nationColorR">色(R):</label>
-        <input type="number" id="nationColorR" value="255"><br>
-        <label for="nationColorG">色(G):</label>
-        <input type="number" id="nationColorG" value="0"><br>
-        <label for="nationColorB">色(B):</label>
-        <input type="number" id="nationColorB" value="0"><br>
-        <label for="nationArmySize">軍隊規模:</label>
-        <input type="number" id="nationArmySize" value="50"><br>
-        <label for="nationShips">船の数:</label>
-        <input type="number" id="nationShips" value="10"><br>
-        <label for="flagSize">国旗のサイズ:</label>
-        <input type="number" id="flagSize" value="20"><br>
+    <div id="controls">
         <button id="createNation">国を作成</button>
-        <button id="resetGame">ゲームをリセット</button>
+        <button id="resetGame">リセット</button>
         <button id="saveGame">ゲームを保存</button>
         <button id="loadGame">ゲームを読み込む</button>
         <button id="addShip">船を追加</button>
         <button id="toggleIdleMode">放置モード: オフ</button>
     </div>
-    <div id="notification" class="notification"></div>
-    <div id="dateDisplay">年月: 0000年1月</div>
+    <div id="createNationForm" style="display: none;">
+        <h3>国を作成</h3>
+        <label for="nationName">国名:</label>
+        <input type="text" id="nationName"><br>
+        <label for="nationX">X座標:</label>
+        <input type="number" id="nationX"><br>
+        <label for="nationY">Y座標:</label>
+        <input type="number" id="nationY"><br>
+        <label for="nationStrength">国力:</label>
+        <input type="number" id="nationStrength"><br>
+        <label for="nationPopulation">人口:</label>
+        <input type="number" id="nationPopulation"><br>
+        <label for="nationPeaceLevel">平和度:</label>
+        <input type="number" id="nationPeaceLevel"><br>
+        <label for="nationColor">色 (RGB):</label>
+        <input type="text" id="nationColor" placeholder="例: 255,0,0"><br>
+        <label for="nationArmySize">軍隊規模:</label>
+        <input type="number" id="nationArmySize"><br>
+        <label for="nationShipCount">船の数:</label>
+        <input type="number" id="nationShipCount"><br>
+        <label for="nationFlagSize">国旗のサイズ:</label>
+        <input type="number" id="nationFlagSize"><br>
+        <button id="createNationButton">作成</button>
+    </div>
     <div id="nationInfo"></div>
+    <div id="dateDisplay"></div>
     <script src="game.js"></script>
 </body>
 </html>
