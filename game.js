@@ -291,9 +291,21 @@ function addShip() {
 }
 
 // 放置モードの切り替え
+// 放置モードを切り替える関数
 function toggleIdleMode() {
     isIdleMode = !isIdleMode;
-    document.getElementById('toggleIdleMode').textContent = `放置モード: ${isIdleMode ? 'オン' : 'オフ'}`;
+    const button = document.getElementById('toggleIdleMode');
+    button.textContent = `放置モード: ${isIdleMode ? 'オン' : 'オフ'}`;
+    if (isIdleMode) {
+        setInterval(() => {
+            nations.forEach(nation => {
+                if (nation.alive) {
+                    nation.expandTerritory(expansionDirection);
+                }
+            });
+            drawAll();
+        }, 2000); // 2秒ごとに領土を拡大
+    }
 }
 
 // 国を作成する関数
@@ -331,6 +343,41 @@ function gameLoop() {
     }
     requestAnimationFrame(gameLoop);
 }
+
+// ポリゴンの領土を拡大（指定した方向にランダムぐにゃぐにゃ）
+Nation.prototype.expandTerritory = function(direction) {
+    const expansionAmount = 1; // 拡大量
+    const angle = direction * (Math.PI / 180); // 角度をラジアンに変換
+
+    // ランダムなノイズを追加
+    const noise = (Math.random() - 0.5) * 2 * Math.PI / 180;
+
+    const newPoints = [];
+    this.territory.forEach(point => {
+        const dx = Math.cos(angle + noise) * expansionAmount;
+        const dy = Math.sin(angle + noise) * expansionAmount;
+        newPoints.push({
+            x: point.x + dx,
+            y: point.y + dy
+        });
+    });
+    this.territory = newPoints;
+};
+
+let expansionDirection = 0; // 初期の拡大方向
+
+// キャンバス上で矢印キーを使用して領土の拡大方向を設定
+document.addEventListener('keydown', (event) => {
+    if (event.key === 'ArrowUp') {
+        expansionDirection = 0; // 北
+    } else if (event.key === 'ArrowRight') {
+        expansionDirection = 90; // 東
+    } else if (event.key === 'ArrowDown') {
+        expansionDirection = 180; // 南
+    } else if (event.key === 'ArrowLeft') {
+        expansionDirection = 270; // 西
+    }
+});
 
 // イベントリスナー
 document.getElementById('createNation').addEventListener('click', createNation);
