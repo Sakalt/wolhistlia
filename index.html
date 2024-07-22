@@ -1,68 +1,405 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ゲーム</title>
+    <title>Nation Expansion Game</title>
     <style>
-        canvas {
+        #gameCanvas {
             border: 1px solid black;
         }
-        #controls, #createNationForm {
+        #controls {
             margin-top: 10px;
+            font-family: Arial, sans-serif;
         }
-        button {
+        #controls button {
             margin-right: 10px;
-            background-color: red; /* ボタンの色を赤に変更 */
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            cursor: pointer;
         }
-        button:hover {
-            opacity: 0.8;
+        #controls div {
+            margin-bottom: 5px;
         }
         #nationInfo {
             margin-top: 10px;
+            font-family: Arial, sans-serif;
         }
     </style>
 </head>
 <body>
     <canvas id="gameCanvas" width="800" height="600"></canvas>
     <div id="controls">
-        <button id="createNation">国を作成</button>
-        <button id="resetGame">リセット</button>
-        <button id="saveGame">ゲームを保存</button>
-        <button id="loadGame">ゲームを読み込む</button>
-        <button id="addShip">船を追加</button>
         <button id="toggleIdleMode">放置モード: オフ</button>
+        <button id="saveGame">セーブ</button>
+        <button id="loadGame">ロード</button>
+        <button id="startWar">戦争開始</button>
+        <div id="dateDisplay">年月: 0年1月</div>
+        <div id="nationInfo">選択された国の情報がここに表示されます。</div>
     </div>
-    <div id="createNationForm" style="display: none;">
-        <h3>国を作成</h3>
-        <label for="nationName">国名:</label>
-        <input type="text" id="nationName"><br>
-        <label for="nationX">X座標:</label>
-        <input type="number" id="nationX"><br>
-        <label for="nationY">Y座標:</label>
-        <input type="number" id="nationY"><br>
-        <label for="nationStrength">国力:</label>
-        <input type="number" id="nationStrength"><br>
-        <label for="nationPopulation">人口:</label>
-        <input type="number" id="nationPopulation"><br>
-        <label for="nationPeaceLevel">平和度:</label>
-        <input type="number" id="nationPeaceLevel"><br>
-        <label for="nationColor">色 (RGB):</label>
-        <input type="text" id="nationColor" placeholder="例: 255,0,0"><br>
-        <label for="nationArmySize">軍隊規模:</label>
-        <input type="number" id="nationArmySize"><br>
-        <label for="nationShipCount">船の数:</label>
-        <input type="number" id="nationShipCount"><br>
-        <label for="nationFlagSize">国旗のサイズ:</label>
-        <input type="number" id="nationFlagSize"><br>
-        <button id="createNationButton">作成</button>
-    </div>
-    <div id="nationInfo"></div>
-    <div id="dateDisplay"></div>
-    <script src="game.js"></script>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        let nations = [];
+        let ships = [];
+        let isIdleMode = false;
+        let currentYear = 0;
+        let currentMonth = 0;
+        let selectedNation = null;
+        let expansionDirection = { x: 0, y: 0 };
+
+        // 背景画像の設定
+        const backgroundImage = new Image();
+        backgroundImage.src = 'world.png';
+        backgroundImage.onload = () => {
+            drawAll();
+        };
+
+        // 国のコンストラクタ
+        function Nation(name, x, y, strength, population, peaceLevel, color, armySize, shipCount, flagSize) {
+            this.name = name;
+            this.x = x;
+            this.y = y;
+            this.strength = strength;
+            this.population = population;
+            this.peaceLevel = peaceLevel;
+            this.color = color;
+            this.armySize = armySize;
+            this.ships = shipCount;
+            this.flagSize = flagSize;
+            this.capital = { x: x, y: y };
+            this.territory = this.generatePolygonTerritory();
+            this.exclaves = [];
+            this.alive = true;
+            this.relationships = {};
+            this.generateRelationships();
+        }
+
+        // ポリゴンの領土を生成
+        Nation.prototype.generatePolygonTerritory = function() {
+            const vertices = Math.floor(Math.random() * 6) + 3;
+            const radius = Math.floor(Math.random() * 17) + 10;
+            const points = [];
+            for (let i = 0; i < vertices; i++) {
+                const angle = (i / vertices) * 2 * Math.PI;
+                const x = this.x + radius * Math.cos(angle);
+                const y = this.y + radius * Math.sin(angle);
+                points.push({ x, y });
+            }
+            return points;
+        };
+
+        // ポリゴンの領土を拡大
+        Nation.prototype.expandTerritory = function(directionX, directionY) {
+            const expansionAmount = 1;
+            const angle = Math.atan2(directionY - this.y, directionX - this.x);
+            const noise = (Math.random() - 0.5) * 2 * Math.PI / 180;
+
+            const newPoints = [];
+            this.territory.forEach(point => {
+                const dx = Math.cos(angle + noise) * expansionAmount;
+                const dy = Math.sin(angle + noise) * expansionAmount;
+                newPoints.push({
+                    x: point.x + dx,
+                    y: point.y + dy
+                });
+            });
+            this.territory = newPoints;
+        };
+
+        // ポリゴンで領土を描画
+        Nation.prototype.draw = function() {
+            if (!this.alive) return;
+
+            ctx.fillStyle = `rgba(${this.color}, 0.5)`;
+            ctx.beginPath();
+            this.territory.forEach((point, index) => {
+                if (index === 0) {
+                    ctx.moveTo(point.x, point.y);
+                } else {
+                    ctx.lineTo(point.x, point.y);
+                }
+            });
+            ctx.closePath();
+            ctx.fill();
+
+            this.exclaves.forEach(exclave => {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+                ctx.fillRect(exclave.x, exclave.y, 20, 20);
+            });
+
+            ctx.fillStyle = `rgb(${this.color})`;
+            ctx.fillRect(this.x, this.y, this.flagSize, this.flagSize);
+            ctx.strokeRect(this.x, this.y, this.flagSize, this.flagSize);
+
+            ctx.fillStyle = '#000';
+            ctx.fillText(this.name, this.x + 5, this.y + this.flagSize / 2);
+
+            ctx.fillStyle = 'red';
+            ctx.beginPath();
+            ctx.arc(this.capital.x, this.capital.y, 5, 0, 2 * Math.PI);
+            ctx.fill();
+        };
+
+        // 国同士の関係性生成
+        Nation.prototype.generateRelationships = function() {
+            nations.forEach(otherNation => {
+                if (otherNation !== this) {
+                    this.relationships[otherNation.name] = Math.random() > 0.5 ? '友好' : '敵対';
+                }
+            });
+        };
+
+        // 船のコンストラクタ
+        function Ship(x, y, nation) {
+            this.x = x;
+            this.y = y;
+            this.nation = nation;
+            this.target = null;
+        }
+
+        // 船を移動させる関数
+        function moveShips() {
+            ships.forEach(ship => {
+                if (ship.target) {
+                    const dx = ship.target.x - ship.x;
+                    const dy = ship.target.y - ship.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    if (distance < 1) {
+                        handleShipArrival(ship);
+                        return;
+                    }
+                    const speed = 1;
+                    ship.x += dx / distance * speed;
+                    ship.y += dy / distance * speed;
+                }
+            });
+        }
+
+        // 船が目的地に到達したときの処理
+        function handleShipArrival(ship) {
+            const targetNation = nations.find(nation => 
+                isPointInPolygon(ship.target.x, ship.target.y, nation.territory)
+            );
+            if (targetNation && targetNation !== ship.nation) {
+                targetNation.exclaves.push({ x: ship.target.x, y: ship.target.y });
+                if (Math.hypot(targetNation.capital.x - ship.target.x, targetNation.capital.y - ship.target.y) < 10) {
+                    targetNation.alive = false;
+                }
+            }
+        }
+
+        // ポリゴン内の点の判定
+        function isPointInPolygon(x, y, polygon) {
+            let inside = false;
+            for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+                const xi = polygon[i].x, yi = polygon[i].y;
+                const xj = polygon[j].x, yj = polygon[j].y;
+                const intersect = ((yi > y) !== (yj > y)) &&
+                                  (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+                if (intersect) inside = !inside;
+            }
+            return inside;
+        }
+
+        // 全ての国を描画
+        function drawAll() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
+            nations.forEach(nation => nation.draw());
+            ships.forEach(ship => {
+                ctx.fillStyle = 'blue';
+                ctx.beginPath();
+                ctx.arc(ship.x, ship.y, 5, 0, 2 * Math.PI);
+                ctx.fill();
+            });
+            document.getElementById('dateDisplay').textContent = `年月: ${currentYear}年${currentMonth + 1}月`;
+
+            if (selectedNation) {
+                const infoDiv = document.getElementById('nationInfo');
+                infoDiv.innerHTML = `
+                    <strong>${selectedNation.name}</strong><br>
+                    国力: ${selectedNation.strength}<br>
+                    人口: ${selectedNation.population}<br>
+                    平和度: ${selectedNation.peaceLevel}<br>
+                    色: ${selectedNation.color}<br>
+                    軍隊規模: ${selectedNation.armySize}<br>
+                    船の数: ${selectedNation.ships}<br>
+                    国旗のサイズ: ${selectedNation.flagSize}<br>
+                `;
+            }
+        }
+
+        // セーブ機能
+        document.getElementById('saveGame').addEventListener('click', () => {
+            const gameState = {
+                nations: nations.map(nation => ({
+                    name: nation.name,
+                    x: nation.x,
+                    y: nation.y,
+                    strength: nation.strength,
+                    population: nation.population,
+                    peaceLevel: nation.peaceLevel,
+                    color: nation.color,
+                    armySize: nation.armySize,
+                    shipCount: nation.ships,
+                    flagSize: nation.flagSize,
+                    capital: nation.capital,
+                    territory: nation.territory,
+                    exclaves: nation.exclaves,
+                    alive: nation.alive
+                })),
+                ships: ships.map(ship => ({
+                    x: ship.x,
+                    y: ship.y,
+                    nation: ship.nation.name,
+                    target: ship.target ? { x: ship.target.x, y: ship.target.y } : null
+                })),
+                currentYear,
+                currentMonth
+            };
+            localStorage.setItem('gameState', JSON.stringify(gameState));
+            alert('ゲームがセーブされました。');
+        });
+
+        // ロード機能
+        document.getElementById('loadGame').addEventListener('click', () => {
+            const gameState = JSON.parse(localStorage.getItem('gameState'));
+            if (gameState) {
+                nations = gameState.nations.map(data => new Nation(
+                    data.name,
+                    data.x,
+                    data.y,
+                    data.strength,
+                    data.population,
+                    data.peaceLevel,
+                    data.color,
+                    data.armySize,
+                    data.shipCount,
+                    data.flagSize
+                ));
+                ships = gameState.ships.map(data => new Ship(
+                    data.x,
+                    data.y,
+                    nations.find(nation => nation.name === data.nation)
+                ));
+                ships.forEach((ship, index) => {
+                    if (data.target) {
+                        ship.target = data.target;
+                    }
+                });
+                currentYear = gameState.currentYear;
+                currentMonth = gameState.currentMonth;
+                drawAll();
+                alert('ゲームがロードされました。');
+            } else {
+                alert('セーブデータがありません。');
+            }
+        });
+
+        // 戦争機能
+        document.getElementById('startWar').addEventListener('click', () => {
+            const attacker = prompt('攻撃国の名前を入力してください:');
+            const defender = prompt('防御国の名前を入力してください:');
+            const attackerNation = nations.find(nation => nation.name === attacker);
+            const defenderNation = nations.find(nation => nation.name === defender);
+
+            if (attackerNation && defenderNation) {
+                if (attackerNation.strength > defenderNation.strength) {
+                    // 併合
+                    attackerNation.territory = attackerNation.territory.concat(defenderNation.territory);
+                    attackerNation.exclaves = attackerNation.exclaves.concat(defenderNation.exclaves);
+                    defenderNation.alive = false;
+                    alert(`${defender}は${attacker}に併合されました。`);
+                } else {
+                    // 滅亡
+                    defenderNation.alive = false;
+                    alert(`${defender}は滅亡しました。`);
+                }
+                drawAll();
+            } else {
+                alert('国が見つかりません。');
+            }
+        });
+
+        // キャンバス上でクリックしたときの処理
+        canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            selectedNation = null;
+            nations.forEach(nation => {
+                if (isPointInPolygon(x, y, nation.territory)) {
+                    selectedNation = nation;
+                }
+            });
+
+            if (selectedNation) {
+                drawAll();
+            } else {
+                const name = prompt('新しい国の名前を入力してください:');
+                if (name) {
+                    const strength = Math.floor(Math.random() * 101);
+                    const population = Math.floor(Math.random() * 10001);
+                    const peaceLevel = Math.floor(Math.random() * 101);
+                    const color = `rgb(${Math.floor(Math.random() * 256)},${Math.floor(Math.random() * 256)},${Math.floor(Math.random() * 256)})`;
+                    const armySize = Math.floor(Math.random() * 101);
+                    const shipCount = Math.floor(Math.random() * 11);
+                    const flagSize = Math.floor(Math.random() * 41) + 10;
+                    const newNation = new Nation(name, x, y, strength, population, peaceLevel, color, armySize, shipCount, flagSize);
+                    nations.push(newNation);
+                    drawAll();
+                }
+            }
+        });
+
+        // キャンバス上でマウスの移動方向を取得し、領土拡大方向に設定
+        canvas.addEventListener('mousemove', (event) => {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = event.clientX - rect.left;
+            const mouseY = event.clientY - rect.top;
+            expansionDirection = { x: mouseX, y: mouseY };
+        });
+
+        // 放置モードを切り替える関数
+        function toggleIdleMode() {
+            isIdleMode = !isIdleMode;
+            const button = document.getElementById('toggleIdleMode');
+            button.textContent = `放置モード: ${isIdleMode ? 'オン' : 'オフ'}`;
+            if (isIdleMode) {
+                setInterval(() => {
+                    nations.forEach(nation => {
+                        if (nation.alive) {
+                            nation.expandTerritory(expansionDirection.x, expansionDirection.y);
+                        }
+                    });
+                    drawAll();
+                }, 2000); // 2秒ごとに領土を拡大
+            }
+        }
+
+        // 定期的に年月を更新
+        function updateDate() {
+            currentMonth++;
+            if (currentMonth >= 12) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            drawAll();
+        }
+
+        // 年月の自動更新
+        setInterval(updateDate, 1000);
+
+        // 初期化
+        function init() {
+            // 最初の国を作成
+            nations.push(new Nation('最初の国', 100, 100, 50, 5000, 50, '255,0,0', 50, 5, 20));
+            drawAll();
+        }
+
+        // 初期化関数を呼び出す
+        init();
+
+        document.getElementById('toggleIdleMode').addEventListener('click', toggleIdleMode);
+    </script>
 </body>
 </html>
